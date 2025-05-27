@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語クイズ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .question-word {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 25px;
+            text-align: center;
+            padding: 15px;
+            background-color: #e9f5ff;
+            border-left: 5px solid #007bff;
+            border-radius: 5px;
+        }
+        .options-container label {
+            display: block;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .options-container label:hover {
+            background-color: #e9ecef;
+        }
+        .options-container input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .score {
+            margin-top: 25px;
+            font-size: 1.2em;
+            text-align: center;
+            color: #555;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #next-button {
+            background-color: #28a745;
+        }
+        #next-button:hover {
+            background-color: #1e7e34;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 10px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #007bff;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>英単語クイズ</h1>
+        <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="question-word" class="question-word"></div>
+        <div id="options-container" class="options">
+            <!-- 選択肢はJavaScriptで生成 -->
+        </div>
+        <button id="submit-button">回答</button>
+        <div id="feedback" class="feedback"></div>
+        <button id="next-button" style="display:none;">次の問題</button>
+        <div id="score" class="score">スコア: 0 / 0</div>
+    </div>
+
+    <script>
+        const wordList = [
+            { word: "refrigerator", meaning: "冷蔵庫" },
+            { word: "microwave oven", meaning: "電子レンジ" },
+            { word: "stove", meaning: "コンロ" },
+            { word: "air conditioner", meaning: "エアコン" },
+            { word: "heater", meaning: "暖房、ストーブ" },
+            { word: "vacuum cleaner", meaning: "掃除機" },
+            { word: "washing machine", meaning: "洗濯機" },
+            { word: "light bulb", meaning: "電球" },
+            { word: "bookcase / bookshelf", meaning: "本棚" },
+            { word: "laundry detergent", meaning: "洗剤" },
+            { word: "light fixture", meaning: "照明器具" },
+            { word: "stapler", meaning: "ホッチキス" },
+            { word: "sunscreen", meaning: "日焼け止め" },
+            { word: "envelope", meaning: "封筒" },
+            { word: "scale", meaning: "はかり" },
+            { word: "cupboard", meaning: "食器棚" },
+            { word: "scissors", meaning: "はさみ" },
+            { word: "stationery", meaning: "文房具" },
+            { word: "plastic bag", meaning: "ビニール袋" },
+            { word: "folding chair", meaning: "折り畳み式の椅子" },
+            { word: "cardboard box", meaning: "段ボール箱" },
+            { word: "rug", meaning: "じゅうたん" },
+            { word: "drape", meaning: "厚手のカーテン" },
+            { word: "scarf", meaning: "マフラー、スカーフ" },
+            { word: "laptop", meaning: "ノートPC" },
+            { word: "mobile phone / cell phone", meaning: "携帯電話" },
+            { word: "photocopier / copy machine", meaning: "コピー機" },
+            { word: "rechargeable battery", meaning: "充電池" },
+            { word: "briefcase", meaning: "書類カバン" },
+            { word: "revolving door", meaning: "回転ドア" },
+            { word: "freight elevator", meaning: "貨物用エレベーター" },
+            { word: "treadmill", meaning: "ランニングマシン" },
+            { word: "board of directors", meaning: "役員会" },
+            { word: "accounting department", meaning: "経理部" },
+            { word: "marketing department", meaning: "マーケティング部" },
+            { word: "human resources department", meaning: "人事部" },
+            { word: "personnel department", meaning: "人事部" }, // 意図的な重複の可能性あり
+            { word: "administrative department", meaning: "管理部" },
+            { word: "legal department", meaning: "法務部" },
+            { word: "sales department", meaning: "営業部" },
+            { word: "technology department", meaning: "技術部" },
+            { word: "security department", meaning: "保安部" },
+            { word: "purchasing department", meaning: "購買部" },
+            { word: "payroll department", meaning: "給与部" },
+            { word: "public relations department", meaning: "広報部" },
+            { word: "advertising department", meaning: "宣伝部" },
+            { word: "general affairs department", meaning: "総務部" },
+            { word: "plumber", meaning: "配管工" },
+            { word: "mechanic", meaning: "機械工" },
+            { word: "carpenter", meaning: "大工" },
+            { word: "welder", meaning: "溶接工" },
+            { word: "electrician", meaning: "電気屋" },
+            { word: "civil engineer", meaning: "土木作業員" },
+            { word: "dentist", meaning: "歯科医" },
+            { word: "surgeon", meaning: "外科医" },
+            { word: "pharmacist", meaning: "薬剤師" },
+            { word: "veterinarian", meaning: "獣医" },
+            { word: "bakery", meaning: "パン屋" },
+            { word: "florist", meaning: "花屋" },
+            { word: "cleaners", meaning: "クリーニング店" },
+            { word: "locksmith", meaning: "鍵屋" },
+            { word: "moving company", meaning: "引越し業者" },
+            { word: "hardware store", meaning: "ホームセンター" },
+            { word: "printer", meaning: "印刷業者" },
+            { word: "courier", meaning: "宅配業者" },
+            { word: "real estate agency", meaning: "不動産屋" },
+            { word: "accountant", meaning: "会計士" },
+            { word: "auditor", meaning: "会計監査官" },
+            { word: "anthropologist", meaning: "人類学者" },
+            { word: "biologist", meaning: "生物学者" },
+            { word: "botanist", meaning: "植物学者" },
+            { word: "scientist", meaning: "科学者" },
+            { word: "chemist", meaning: "化学者" },
+            { word: "historian", meaning: "歴史学者" },
+            { word: "lawyer / attorney", meaning: "弁護士" },
+            { word: "professor", meaning: "教授" },
+            { word: "paralegal", meaning: "弁護士補助員" },
+            { word: "journalist", meaning: "ジャーナリスト" },
+            { word: "announcer", meaning: "アナウンサー" },
+            { word: "host", meaning: "司会者" },
+            { word: "correspondent", meaning: "特派員" },
+            { word: "editor", meaning: "編集者" },
+            { word: "proofreader", meaning: "校正者" },
+            { word: "novelist", meaning: "小説家" },
+            { word: "librarian", meaning: "図書館員" },
+            { word: "flight attendant", meaning: "フライトアテンダント" },
+            { word: "travel agent", meaning: "旅行業者" },
+            { word: "tour guide", meaning: "ツアーガイド" },
+            { word: "concierge", meaning: "コンシェルジュ" },
+            { word: "housekeeping", meaning: "客室係" },
+            { word: "conductor", meaning: "車掌、指揮者" },
+            { word: "operator", meaning: "オペレーター" },
+            { word: "architect", meaning: "建築家" },
+            { word: "photographer", meaning: "写真家" },
+            { word: "choreographer", meaning: "振付師" },
+            { word: "actor", meaning: "俳優" },
+            { word: "actress", meaning: "女優" },
+            { word: "curator", meaning: "学芸員" },
+            { word: "receptionist", meaning: "受付" },
+            { word: "secretary", meaning: "秘書" },
+            { word: "spokesperson", meaning: "広報担当者" },
+            { word: "ambassador", meaning: "大使" },
+            { word: "security guard", meaning: "警備員" },
+            { word: "cashier", meaning: "レジ係" },
+            { word: "accounting", meaning: "会計学" },
+            { word: "architecture", meaning: "建築学" },
+            { word: "astronomy", meaning: "天文学" },
+            { word: "biology", meaning: "生物学" },
+            { word: "chemistry", meaning: "化学" },
+            { word: "ecology", meaning: "生態学" },
+            { word: "economics", meaning: "経済学" },
+            { word: "education", meaning: "教育学" },
+            { word: "engineering", meaning: "工学" },
+            { word: "fine arts", meaning: "芸術" },
+            { word: "history", meaning: "歴史学" },
+            { word: "journalism", meaning: "ジャーナリズム" },
+            { word: "law", meaning: "法学" },
+            { word: "linguistics", meaning: "言語学" },
+            { word: "literature", meaning: "文学" },
+            { word: "mathematics", meaning: "数学" },
+            { word: "medicine", meaning: "医学" },
+            { word: "philosophy", meaning: "哲学" },
+            { word: "physics", meaning: "物理学" },
+            { word: "psychology", meaning: "心理学" },
+            { word: "robotics", meaning: "ロボット工学" },
+            { word: "sociology", meaning: "社会学" },
+            { word: "due to / owing to", meaning: "〜が理由で" },
+            { word: "despite / in spite of / notwithstanding", meaning: "〜にもかかわらず" },
+            { word: "given / in light of", meaning: "〜を考慮に入れると" },
+            { word: "in the event of", meaning: "〜の場合" },
+            { word: "in addition to", meaning: "〜に加えて" },
+            { word: "except for", meaning: "〜を除いて" },
+            { word: "regardless of", meaning: "〜とは無関係に" },
+            { word: "instead of", meaning: "〜の代わりに" },
+            { word: "whereas", meaning: "一方で" },
+            { word: "whether", meaning: "〜であろうと、〜かどうか" },
+            { word: "as soon as", meaning: "〜するとすぐに" },
+            { word: "once", meaning: "いったん〜したら" },
+            { word: "unless", meaning: "〜しない限り" },
+            { word: "now that", meaning: "今はもう〜なので" },
+            { word: "so that / in order that", meaning: "〜するように" },
+            { word: "although / though / even though", meaning: "〜にもかかわらず" },
+            { word: "even if", meaning: "たとえ〜でも" },
+            { word: "provided that", meaning: "〜するという条件でのみ" },
+            { word: "as long as", meaning: "〜する限り" },
+            { word: "in case", meaning: "〜するといけないので" },
+            { word: "given that", meaning: "〜を考慮すると" },
+            { word: "in the event that", meaning: "〜した場合" },
+            { word: "in so far as", meaning: "〜する限りにおいて" },
+            { word: "inasmuch as", meaning: "〜する限りにおいて、〜するので" },
+            { word: "therefore", meaning: "したがって" },
+            { word: "however", meaning: "しかしながら" },
+            { word: "nevertheless", meaning: "それにもかかわらず" },
+            { word: "moreover", meaning: "その上" },
+            { word: "furthermore", meaning: "さらに" },
+            { word: "consequently", meaning: "結果として" },
+            { word: "thereby", meaning: "そうすることで" },
+            { word: "thus", meaning: "このようにして" },
+            { word: "meanwhile", meaning: "その間" },
+            { word: "a course of action", meaning: "一連の行動" },
+            { word: "a number of", meaning: "いくつかの" },
+            { word: "a wealth of", meaning: "豊富な" },
+            { word: "above all", meaning: "とりわけ、何よりも" },
+            { word: "after all", meaning: "結局" },
+            { word: "ahead of schedule", meaning: "予定より早く" },
+            { word: "along with", meaning: "〜と一緒に" },
+            { word: "among other things", meaning: "とりわけ、何よりも" },
+            { word: "as a whole", meaning: "全体として" },
+            { word: "as early as", meaning: "早ければ" },
+            { word: "as far as", meaning: "〜する範囲では" },
+            { word: "as of", meaning: "〜以降、〜付けで" },
+            { word: "aside from", meaning: "〜は別として" },
+            { word: "at all times", meaning: "常時" },
+            { word: "at least", meaning: "少なくとも" },
+            { word: "at the latest", meaning: "遅くとも" },
+            { word: "at your earliest convenience", meaning: "あなたの都合がつき次第" },
+            { word: "be credited with", meaning: "〜の功績があるとされる" },
+            { word: "be supposed to do", meaning: "〜することになっている" },
+            { word: "behind schedule", meaning: "予定より遅れて" },
+            { word: "box office", meaning: "チケット売り場" },
+            { word: "bulk order", meaning: "大量注文、大口発注" },
+            { word: "by a wide margin", meaning: "大差で" },
+            { word: "by any chance", meaning: "ひょっとして" },
+            { word: "by means of", meaning: "〜という手段で" },
+            { word: "Can you do me a favor?", meaning: "お願いがあるのですが。" },
+            { word: "come up with", meaning: "〜を思いつく" },
+            { word: "cordially invite", meaning: "謹んで招待する" },
+            { word: "deal with", meaning: "〜を扱う" },
+            { word: "depend on", meaning: "〜次第だ、〜に頼る" },
+            { word: "drop off", meaning: "〜を預ける" },
+            { word: "Either is fine.", meaning: "どちらでも構いません。" },
+            { word: "field trip", meaning: "郊外学習、現地調査" },
+            { word: "figure out", meaning: "理解する" },
+            { word: "fill out", meaning: "記入する" },
+            { word: "for further information", meaning: "詳しくは" },
+            { word: "for instance", meaning: "例えば" },
+            { word: "get in touch with", meaning: "連絡を取る" },
+            { word: "has/have yet to do", meaning: "まだ〜していない" },
+            { word: "in a rush", meaning: "大急ぎで" },
+            { word: "in a timely manner", meaning: "タイミング良く" },
+            { word: "in accordance with", meaning: "〜に従って" },
+            { word: "in an effort to do", meaning: "〜しようと努力して" },
+            { word: "in charge of", meaning: "〜を担当している" },
+            { word: "in fact", meaning: "実際" },
+            { word: "in for a treat", meaning: "もうすぐ楽しいことがある" },
+            { word: "in keeping with", meaning: "〜に合わせて" },
+            { word: "in person", meaning: "直接会って" },
+            { word: "in short", meaning: "要するに" },
+            { word: "in progress", meaning: "進行中" },
+            { word: "in the long run", meaning: "長期的には" },
+            { word: "in the meantime", meaning: "その間、それまでの間" },
+            { word: "in the process of", meaning: "〜の最中" },
+            { word: "in time for", meaning: "〜に間に合って" },
+            { word: "in writing", meaning: "書面で" },
+            { word: "It has come to our attention that", meaning: "〜が我々の知るところとなった" },
+            { word: "job fair", meaning: "就職説明会" },
+            { word: "keep in mind that", meaning: "〜を念頭に置く" },
+            { word: "keep up with", meaning: "〜に追いつく" },
+            { word: "live up to", meaning: "期待、要求などにこたえる" },
+            { word: "look no further than", meaning: "〜以外を見る必要はない" },
+            { word: "look to do", meaning: "〜しようとする" },
+            { word: "lost and found", meaning: "遺失物取扱所" },
+            { word: "make room for", meaning: "〜のためにスペースを空ける" },
+            { word: "make sense", meaning: "もっともだ" },
+            { word: "narrow down", meaning: "候補を絞り込む" },
+            { word: "no later than", meaning: "遅くとも" },
+            { word: "no longer", meaning: "もはや〜ない" },
+            { word: "not only A but B as well", meaning: "AだけでなくBも" },
+            { word: "null and void", meaning: "無効の" },
+            { word: "on a budget", meaning: "限られた予算内で" },
+            { word: "on a first-come, first-served basis", meaning: "先着順で" },
+            { word: "on average", meaning: "平均で" },
+            { word: "on behalf of", meaning: "〜を代表して" },
+            { word: "on one's way to", meaning: "〜への途中に" },
+            { word: "on such short notice", meaning: "とても急な知らせで" },
+            { word: "on time", meaning: "時間通りに" },
+            { word: "open to the public", meaning: "一般公開されている" },
+            { word: "out of order", meaning: "故障中" },
+            { word: "out of paper", meaning: "紙切れ" },
+            { word: "out of place", meaning: "場違いの" },
+            { word: "out of print", meaning: "絶版の" },
+            { word: "out of service", meaning: "運転休止中" },
+            { word: "out of shape", meaning: "体調が万全ではない" },
+            { word: "out of stock", meaning: "在庫切れ" },
+            { word: "out of town", meaning: "町を離れる" },
+            { word: "parking lot", meaning: "駐車場" },
+            { word: "pass up the opportunity", meaning: "チャンスを見送る" },
+            { word: "pay off", meaning: "努力などが実を結ぶ、完済する" },
+            { word: "plenty of", meaning: "たくさんの、十分な" },
+            { word: "press conference", meaning: "記者会見" },
+            { word: "press release", meaning: "報道用資料" },
+            { word: "quite a few", meaning: "かなりの数の" },
+            { word: "rather than", meaning: "〜よりむしろ" },
+            { word: "report to work", meaning: "出勤する" },
+            { word: "right away", meaning: "ただちに" },
+            { word: "room and board", meaning: "部屋代と食事代" },
+            { word: "round-trip ticket", meaning: "往復のチケット" },
+            { word: "run into", meaning: "〜とでくわす" },
+            { word: "set aside", meaning: "〜を取っておく" },
+            { word: "Should you have any questions", meaning: "もしご質問があれば" },
+            { word: "spare no expense", meaning: "出費を惜しまない" },
+            { word: "speak highly of", meaning: "〜を褒める" },
+            { word: "stuck in traffic", meaning: "渋滞にはまって" },
+            { word: "take advantage of", meaning: "〜を利用する" },
+            { word: "take effect", meaning: "有効になる" },
+            { word: "take place", meaning: "起こる、開催される" },
+            { word: "thanks to", meaning: "〜のおかげで" },
+            { word: "To whom it may concern", meaning: "ご担当者様" },
+            { word: "trade fair", meaning: "見本市" },
+            { word: "until further notice", meaning: "別途通知があるまでの間" },
+            { word: "upon request", meaning: "リクエストがあり次第" },
+            { word: "wear and tear", meaning: "摩耗" },
+            { word: "well in advance", meaning: "十分前もって" },
+            { word: "When it comes to", meaning: "〜に関して言えば" },
+            { word: "with the exception of", meaning: "〜を例外として" },
+            { word: "within walking distance", meaning: "徒歩圏内" },
+            { word: "work ethic", meaning: "勤労意欲" }
+            // 以下、03_Phrases 以降のデータも同様に追加
+            // ... (省略 ... 全データを入れると非常に長くなるため、上記までで代表とします)
+            // 金フレの600フレーズ、400語、1000語レベルの単語も同様に追加可能です。
+            // ここではユーザー提供の音声データから抽出できる範囲の単語に絞ります。
+            // 実際の「金のフレーズ」全単語リストは著作権の関係で提供できません。
+        ];
+
+        let currentWordPair;
+        let score = 0;
+        let questionsAsked = 0;
+        let askedIndices = new Set();
+
+        const questionWordEl = document.getElementById('question-word');
+        const optionsContainerEl = document.getElementById('options-container');
+        const submitButtonEl = document.getElementById('submit-button');
+        const feedbackEl = document.getElementById('feedback');
+        const nextButtonEl = document.getElementById('next-button');
+        const scoreEl = document.getElementById('score');
+        const progressBarEl = document.getElementById('progress-bar');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function getRandomQuestionIndex() {
+            if (askedIndices.size >= wordList.length) {
+                return -1; // 全ての質問が出題済み
+            }
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * wordList.length);
+            } while (askedIndices.has(randomIndex));
+            askedIndices.add(randomIndex);
+            return randomIndex;
+        }
+
+        function displayQuestion() {
+            const questionIndex = getRandomQuestionIndex();
+            if (questionIndex === -1) {
+                questionWordEl.textContent = "クイズ終了！お疲れ様でした。";
+                optionsContainerEl.innerHTML = "";
+                submitButtonEl.style.display = 'none';
+                nextButtonEl.style.display = 'none';
+                feedbackEl.textContent = `最終スコア: ${score} / ${wordList.length}`;
+                progressBarEl.style.width = '100%';
+                return;
+            }
+
+            currentWordPair = wordList[questionIndex];
+            questionWordEl.textContent = currentWordPair.word;
+
+            const correctAnswer = currentWordPair.meaning;
+            let options = [correctAnswer];
+
+            // 他のランダムな意味を選択肢として追加
+            const allMeanings = wordList.map(item => item.meaning);
+            const wrongAnswers = [];
+            while (wrongAnswers.length < 3) {
+                const randomIndex = Math.floor(Math.random() * allMeanings.length);
+                const randomMeaning = allMeanings[randomIndex];
+                if (randomMeaning !== correctAnswer && !wrongAnswers.includes(randomMeaning) && !options.includes(randomMeaning)) {
+                    wrongAnswers.push(randomMeaning);
+                }
+                // 選択肢が不足する場合のフォールバック (単語リストが小さい場合)
+                if (wrongAnswers.length < 3 && allMeanings.filter(m => m !== correctAnswer && !wrongAnswers.includes(m)).length === 0) {
+                    break; 
+                }
+            }
+             // 不正解の選択肢が3つに満たない場合、ダミーで補完 (より良い方法を検討可)
+            let dummyCount = 1;
+            while (wrongAnswers.length < 3) {
+                wrongAnswers.push(`ダミー選択肢${dummyCount++}`);
+            }
+
+            options.push(...wrongAnswers);
+            shuffleArray(options);
+
+            optionsContainerEl.innerHTML = '';
+            options.forEach((option, index) => {
+                const label = document.createElement('label');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'meaning_option';
+                radio.value = option;
+                radio.id = `option${index}`;
+                label.appendChild(radio);
+                label.appendChild(document.createTextNode(option));
+                optionsContainerEl.appendChild(label);
+            });
+
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+            submitButtonEl.style.display = 'block';
+            nextButtonEl.style.display = 'none';
+            
+            questionsAsked++;
+            updateProgressBar();
+        }
+        
+        function updateProgressBar() {
+            const progress = (askedIndices.size / wordList.length) * 100;
+            progressBarEl.style.width = `${progress}%`;
+        }
+
+        submitButtonEl.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="meaning_option"]:checked');
+            if (!selectedOption) {
+                feedbackEl.textContent = '答えを選択してください。';
+                feedbackEl.className = 'feedback incorrect';
+                return;
+            }
+
+            const userAnswer = selectedOption.value;
+            if (userAnswer === currentWordPair.meaning) {
+                score++;
+                feedbackEl.textContent = '正解！';
+                feedbackEl.className = 'feedback correct';
+            } else {
+                feedbackEl.textContent = `不正解。正解は 「${currentWordPair.meaning}」 でした。`;
+                feedbackEl.className = 'feedback incorrect';
+            }
+
+            scoreEl.textContent = `スコア: ${score} / ${askedIndices.size}`;
+            submitButtonEl.style.display = 'none';
+            nextButtonEl.style.display = 'block';
+
+            if (askedIndices.size >= wordList.length) {
+                nextButtonEl.textContent = "結果を見る"; // ボタンのテキストを変更
+            }
+        });
+
+        nextButtonEl.addEventListener('click', () => {
+            if (askedIndices.size >= wordList.length && nextButtonEl.textContent === "結果を見る") {
+                 displayQuestion(); // 最終結果表示へ
+            } else {
+                displayQuestion();
+            }
+        });
+        
+        // 初期化
+        shuffleArray(wordList); // 単語リストをシャッフルして毎回違う順番で出題
+        displayQuestion();
+
+    </script>
+</body>
+</html>
